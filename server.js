@@ -1,4 +1,4 @@
-import express from "express";
+import express, { request, response } from "express";
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 
@@ -93,6 +93,49 @@ server.get("/customers/:customerId", (request, response) => {
   Customer.find({ _id: customerId })
     .then((person) => response.json(person))
     .catch(() => response.json("Customer not found"));
+});
+
+//ShoppingCart
+
+const shoppingCartSchema = {
+  customerId: String,
+  productName: String,
+  productPrice: Number,
+};
+const ShoppingCart = mongoose.model("ShoppingCart", shoppingCartSchema);
+
+server.post("/shoppingCart/:customerId", (request, response) => {
+  const customerId = request.body.customerId;
+  const productName = request.body.productName;
+  const productPrice = request.body.productPrice;
+
+  const cart = new ShoppingCart({
+    customerId: customerId,
+    productName: productName,
+    productPrice: productPrice,
+  });
+
+  if (customerId && productPrice && productName) {
+    cart
+      .save()
+      .then((cart) =>
+        response.json(
+          `${cart.productName} has been added to ${cart.customerId}'s shoppingcart.`
+        )
+      )
+      .catch((error) => response.json(error));
+  } else {
+    response.json("ERROR: please enter all properties");
+  }
+});
+
+server.get("/shoppingCart/:customerId", (request, response) => {
+  const customerId = request.params.customerId;
+
+  //const sum = request.params.productPrice.reduce();
+  ShoppingCart.find({ customerId: customerId })
+    .then((item) => response.json(item))
+    .catch((error) => response.json(error));
 });
 
 server.listen(4000);
